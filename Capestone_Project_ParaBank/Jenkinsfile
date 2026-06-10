@@ -30,9 +30,24 @@ pipeline {
                 }
             }
         }
+
+        stage('Docker Build') {
+            steps {
+                dir('Capestone_Project_ParaBank') {
+                    sh 'docker build -t parabank-framework .'
+                }
+            }
+        }
+
+        stage('Docker Run') {
+            steps {
+                sh 'docker run --rm parabank-framework'
+            }
+        }
     }
 
     post {
+
         success {
             echo 'Build Successful'
         }
