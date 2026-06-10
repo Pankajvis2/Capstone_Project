@@ -282,3 +282,29 @@ Driver info: driver.version: unknown
 2026-06-10 10:03:27 INFO  TestListener - Test started: logoutTest
 2026-06-10 10:03:31 INFO  TestListener - Test passed: logoutTest
 2026-06-10 10:03:31 INFO  TestListener - Test execution finished: ParaBank Regression Tests
+2026-06-10 11:25:01 INFO  TestListener - Test execution started: ParaBank Regression Tests
+2026-06-10 11:25:09 INFO  TestListener - Test started: registerNewCustomer
+2026-06-10 11:25:11 INFO  TestListener - Test passed: registerNewCustomer
+2026-06-10 11:25:15 INFO  TestListener - Test started: invalidLoginTest
+2026-06-10 11:25:16 INFO  TestListener - Test passed: invalidLoginTest
+2026-06-10 11:25:18 INFO  TestListener - Test started: invalidLoginTest
+2026-06-10 11:25:20 INFO  TestListener - Test passed: invalidLoginTest
+2026-06-10 11:25:23 INFO  TestListener - Test started: invalidLoginTest
+2026-06-10 11:25:24 INFO  TestListener - Test passed: invalidLoginTest
+2026-06-10 11:25:28 INFO  TestListener - Test started: validLoginTest
+2026-06-10 11:25:30 INFO  TestListener - Test passed: validLoginTest
+2026-06-10 11:25:31 INFO  TestListener - Test started: openNewSavingsAccountTest
+2026-06-10 11:25:35 INFO  TestListener - Test passed: openNewSavingsAccountTest
+2026-06-10 11:25:37 INFO  TestListener - Test started: transferFundsTest
+2026-06-10 11:25:42 INFO  TestListener - Test passed: transferFundsTest
+2026-06-10 11:25:44 INFO  TestListener - Test started: billPaymentTest
+2026-06-10 11:25:48 INFO  TestListener - Test passed: billPaymentTest
+2026-06-10 11:25:50 INFO  TestListener - Test started: findTransactionTest
+2026-06-10 11:25:56 INFO  TestListener - Test passed: findTransactionTest
+2026-06-10 11:25:58 INFO  TestListener - Test started: updateContactInfoTest
+2026-06-10 11:26:02 INFO  TestListener - Test passed: updateContactInfoTest
+2026-06-10 11:26:05 INFO  TestListener - Test started: requestLoanTest
+2026-06-10 11:26:07 INFO  TestListener - Test passed: requestLoanTest
+2026-06-10 11:26:09 INFO  TestListener - Test started: logoutTest
+2026-06-10 11:26:14 INFO  TestListener - Test passed: logoutTest
+2026-06-10 11:26:14 INFO  TestListener - Test execution finished: ParaBank Regression Tests
