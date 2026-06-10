@@ -42,14 +42,14 @@ pipeline {
         stage('Docker Build') {
             steps {
                 dir('Capestone_Project_ParaBank') {
-                    sh '/opt/homebrew/bin/docker build --no-cache --platform linux/amd64 -t parabank-framework .'
+                    sh '/usr/local/bin/docker build --no-cache --platform linux/amd64 -t parabank-framework .'
                 }
             }
         }
 
         stage('Docker Run') {
             steps {
-                sh '/opt/homebrew/bin/docker run --rm --platform linux/amd64 parabank-framework'
+                sh '/usr/local/bin/docker run --rm --platform linux/amd64 --shm-size=2g parabank-framework'
             }
         }
     }
