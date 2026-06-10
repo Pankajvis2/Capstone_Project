@@ -31,6 +31,14 @@ pipeline {
             }
         }
 
+		stage('Check Docker') {
+    		steps {
+        		sh 'echo $PATH'
+        		sh 'ls -l /usr/local/bin/docker'
+        		sh '/usr/local/bin/docker --version'
+    		}
+		}
+		
         stage('Docker Build') {
             steps {
                 dir('Capestone_Project_ParaBank') {
