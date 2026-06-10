@@ -34,14 +34,14 @@ pipeline {
         stage('Docker Build') {
             steps {
                 dir('Capestone_Project_ParaBank') {
-                    sh 'docker build -t parabank-framework .'
+                    sh 'docker build --platform linux/amd64 -t parabank-framework .'
                 }
             }
         }
 
         stage('Docker Run') {
             steps {
-                sh 'docker run --rm parabank-framework'
+                sh 'docker run --rm --platform linux/amd64 parabank-framework'
             }
         }
     }
