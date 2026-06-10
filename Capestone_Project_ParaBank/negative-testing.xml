@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="ParaBank Negative Testing Cross Browser Suite" parallel="false" verbose="0">
+    <listeners>
+        <listener class-name="listener.TestListener"/>
+    </listeners>
+
+    <test name="Chrome Negative Tests">
+        <parameter name="browser" value="chrome"/>
+        <classes>
+            <class name="test.NegativeTest"/>
+        </classes>
+    </test>
+
+ <!--   <test name="Safari Negative Tests">
+        <parameter name="browser" value="safari"/>
+        <classes>
+            <class name="test.NegativeTest"/>
+        </classes>
+    </test>  -->
+</suite>

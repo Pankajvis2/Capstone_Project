@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'Jdk 21'
+        maven 'Maven3'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'master',
+                    url: 'https://github.com/Pankajvis2/Capstone.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir('Capestone_Project_ParaBank') {
+                    sh 'mvn clean compile'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('Capestone_Project_ParaBank') {
+                    sh 'mvn test'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Build Successful'
+        }
+
+        failure {
+            echo 'Build Failed'
+        }
+
+        always {
+            junit allowEmptyResults: true,
+                  testResults: 'Capestone_Project_ParaBank/target/surefire-reports/*.xml'
+
+            archiveArtifacts artifacts: 'Capestone_Project_ParaBank/reports/**/*, Capestone_Project_ParaBank/logs/**/*, Capestone_Project_ParaBank/screenshots/**/*, Capestone_Project_ParaBank/allure-results/**/*, Capestone_Project_ParaBank/test-output/**/*',
+                             allowEmptyArchive: true
+        }
+    }
+}

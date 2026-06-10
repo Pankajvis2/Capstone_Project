@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [ParaBank Negative Testing Cross Browser Suite]" guice-stage="DEVELOPMENT" verbose="0">
+  <listeners>
+    <listener class-name="listener.TestListener"/>
+  </listeners>
+  <test thread-count="5" name="Chrome Negative Tests(failed)" verbose="0">
+    <parameter name="browser" value="chrome"/>
+    <classes>
+      <class name="test.NegativeTest">
+        <methods>
+          <include name="setUp"/>
+          <include name="tearDown"/>
+          <include name="bug001_transferFundsAllowsNegativeAmount"/>
+          <include name="bug003_transferFundsAllowsSameSourceAndDestinationAccount"/>
+          <include name="setupNegativeTestData"/>
+          <include name="bug004_billPayAcceptsMismatchedAccountNumbers"/>
+          <include name="bug002_billPaymentAllowsNegativeAmount"/>
+        </methods>
+      </class> <!-- test.NegativeTest -->
+    </classes>
+  </test> <!-- Chrome Negative Tests(failed) -->
+  <test thread-count="5" name="Safari Negative Tests(failed)" verbose="0">
+    <parameter name="browser" value="safari"/>
+    <classes>
+      <class name="test.NegativeTest">
+        <methods>
+          <include name="setUp"/>
+          <include name="tearDown"/>
+          <include name="bug001_transferFundsAllowsNegativeAmount"/>
+          <include name="bug003_transferFundsAllowsSameSourceAndDestinationAccount"/>
+          <include name="setupNegativeTestData"/>
+          <include name="bug004_billPayAcceptsMismatchedAccountNumbers"/>
+          <include name="bug002_billPaymentAllowsNegativeAmount"/>
+        </methods>
+      </class> <!-- test.NegativeTest -->
+    </classes>
+  </test> <!-- Safari Negative Tests(failed) -->
+</suite> <!-- Failed suite [ParaBank Negative Testing Cross Browser Suite] -->

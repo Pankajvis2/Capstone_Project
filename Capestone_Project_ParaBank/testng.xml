@@ -1,0 +1,30 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="ParaBank Selenium TestNG Suite" parallel="false" verbose="1">
+
+    <listeners>
+
+        <!-- Allure Listener -->
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+
+        <!-- Extent Report + Screenshot Listener -->
+        <listener class-name="listener.TestListener"/>
+
+    </listeners>
+
+    <parameter name="browser" value="chrome"/>
+
+    <test name="ParaBank Regression Tests">
+
+        <classes>
+
+            <class name="test.ParaBankTest"/>
+
+            <!-- Uncomment if you want Negative Tests also -->
+            <!-- <class name="test.NegativeTest"/> -->
+
+        </classes>
+
+    </test>
+
+</suite>
