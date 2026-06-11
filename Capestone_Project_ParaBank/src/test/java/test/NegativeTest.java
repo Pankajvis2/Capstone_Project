@@ -1,6 +1,7 @@
 package test;
 
 import base.BaseTest;
+import config.ConfigReader;
 import dataproviders.TestDataProvider;
 import factory.DriverFactory;
 import org.testng.Assert;
@@ -11,151 +12,261 @@ import java.util.UUID;
 
 public class NegativeTest extends BaseTest {
 
-	private static final String PASSWORD = "Test@123";
-	private static final String REGISTER_URL = "https://parabank.parasoft.com/parabank/register.htm";
+    private String uniqueUsername() {
+        String randomPart = UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 10);
 
-	private String uniqueUsername() {
-		String randomPart = UUID.randomUUID().toString().replace("-", "");
+        return ("bug" + randomPart).toLowerCase();
+    }
 
-		return ("bug" + randomPart).substring(0, 15).toLowerCase();
-	}
+    private RegisterPage openRegisterPageDirectly() {
+        DriverFactory.getDriver().get(
+                ConfigReader.get("registerUrl")
+        );
+        return new RegisterPage();
+    }
 
-	private RegisterPage openRegisterPageDirectly() {
-		DriverFactory.getDriver().get(REGISTER_URL);
-		return new RegisterPage();
-	}
+    private void registerUser(String firstName, String lastName, String address, String city,
+                              String state, String zip, String phone, String ssn,
+                              String password) {
 
-	private void registerUser(String firstName, String lastName, String address, String city, String state, String zip,
-			String phone, String ssn, String password) {
+        RegisterPage registerPage = openRegisterPageDirectly();
 
-		RegisterPage registerPage = openRegisterPageDirectly();
+        String generatedUsername = uniqueUsername();
 
-		String generatedUsername = uniqueUsername();
+        registerPage.register(
+                firstName,
+                lastName,
+                address,
+                city,
+                state,
+                zip,
+                phone,
+                ssn,
+                generatedUsername,
+                password
+        );
 
-		registerPage.register(firstName, lastName, address, city, state, zip, phone, ssn, generatedUsername, password);
+        Assert.assertTrue(
+                registerPage.isRegistrationSuccessful(),
+                "Precondition failed: user registration was not completed."
+        );
 
-		Assert.assertTrue(registerPage.isRegistrationSuccessful(),
-				"Precondition failed: user registration was not completed.");
+        System.out.println("Registered negative test user: " + generatedUsername);
+    }
 
-		System.out.println("Registered negative test user: " + generatedUsername);
-	}
+    private void createSecondAccount() {
 
-	private void createSecondAccount() {
+        OpenAccountPage openAccountPage =
+                new AccountOverviewPage().goToOpenNewAccount();
 
-		OpenAccountPage openAccountPage = new AccountOverviewPage().goToOpenNewAccount();
+        openAccountPage.openSavingsAccount();
 
-		openAccountPage.openSavingsAccount();
+        String successMessage = openAccountPage.getSuccessMessage();
+        String newAccountId = openAccountPage.getNewAccountId();
 
-		String successMessage = openAccountPage.getSuccessMessage();
+        System.out.println("Second account creation message: " + successMessage);
+        System.out.println("Second account id: " + newAccountId);
 
-		String newAccountId = openAccountPage.getNewAccountId();
+        Assert.assertEquals(
+                successMessage,
+                "Account Opened!",
+                "Precondition failed: second account was not created."
+        );
+    }
 
-		System.out.println("Second account creation message: " + successMessage);
-		System.out.println("Second account id: " + newAccountId);
+    private void printBugOutput(String bugId, String module, String inputData,
+                                String expectedResult, String actualResult,
+                                String status) {
 
-		Assert.assertEquals(successMessage, "Account Opened!", "Precondition failed: second account was not created.");
-	}
+        System.out.println();
+        System.out.println("==================================================");
+        System.out.println("BUG EXECUTION OUTPUT");
+        System.out.println("Bug ID          : " + bugId);
+        System.out.println("Module          : " + module);
+        System.out.println("Input Data      : " + inputData);
+        System.out.println("Expected Result : " + expectedResult);
+        System.out.println("Actual Result   : " + actualResult);
+        System.out.println("Bug Status      : " + status);
+        System.out.println("==================================================");
+        System.out.println();
+    }
 
-	private void printBugOutput(String bugId, String module, String inputData, String expectedResult,
-			String actualResult, String status) {
+    @Test(priority = 1, groups = {"negative", "bug", "transfer"},
+            dataProvider = "bugTransferNegative",
+            dataProviderClass = TestDataProvider.class)
+    public void bug001_transferFundsAllowsNegativeAmount(
+            String firstName,
+            String lastName,
+            String address,
+            String city,
+            String state,
+            String zip,
+            String phone,
+            String ssn,
+            String username,
+            String password,
+            String amount) {
 
-		System.out.println();
-		System.out.println("==================================================");
-		System.out.println("BUG EXECUTION OUTPUT");
-		System.out.println("Bug ID          : " + bugId);
-		System.out.println("Module          : " + module);
-		System.out.println("Input Data      : " + inputData);
-		System.out.println("Expected Result : " + expectedResult);
-		System.out.println("Actual Result   : " + actualResult);
-		System.out.println("Bug Status      : " + status);
-		System.out.println("==================================================");
-		System.out.println();
-	}
+        registerUser(firstName, lastName, address, city, state, zip, phone, ssn, password);
 
-	@Test(priority = 1, groups = { "negative", "bug",
-			"transfer" }, dataProvider = "registrationData", dataProviderClass = TestDataProvider.class)
-	public void bug001_transferFundsAllowsNegativeAmount(String firstName, String lastName, String address, String city,
-			String state, String zip, String phone, String ssn, String username, String password) {
+        createSecondAccount();
 
-		registerUser(firstName, lastName, address, city, state, zip, phone, ssn, password);
+        TransferFundsPage transferFundsPage =
+                new AccountOverviewPage().goToTransferFunds();
 
-		createSecondAccount();
+        transferFundsPage.transfer(amount);
 
-		TransferFundsPage transferFundsPage = new AccountOverviewPage().goToTransferFunds();
+        String actualResult = transferFundsPage.getSuccessMessage();
 
-		transferFundsPage.transfer("-100");
+        printBugOutput(
+                "PB-001",
+                "Transfer Funds",
+                "Amount = " + amount,
+                "System should reject negative transfer amount.",
+                actualResult,
+                actualResult.equals("Transfer Complete!")
+                        ? "BUG REPRODUCED"
+                        : "BUG NOT REPRODUCED"
+        );
 
-		String actualResult = transferFundsPage.getSuccessMessage();
+        Assert.assertEquals(
+                actualResult,
+                "Transfer Complete!",
+                "BUG NOT REPRODUCED: Negative transfer amount was rejected."
+        );
+    }
 
-		printBugOutput("PB-001", "Transfer Funds", "Amount = -100", "System should reject negative transfer amount.",
-				actualResult, actualResult.equals("Transfer Complete!") ? "BUG REPRODUCED" : "BUG NOT REPRODUCED");
+    @Test(priority = 2, groups = {"negative", "bug", "billpay"},
+            dataProvider = "bugBillPaymentNegative",
+            dataProviderClass = TestDataProvider.class)
+    public void bug002_billPaymentAllowsNegativeAmount(
+            String firstName,
+            String lastName,
+            String address,
+            String city,
+            String state,
+            String zip,
+            String phone,
+            String ssn,
+            String username,
+            String password,
+            String accountNumber,
+            String amount) {
 
-		Assert.assertEquals(actualResult, "Transfer Complete!",
-				"BUG NOT REPRODUCED: Negative transfer amount was rejected.");
-	}
+        registerUser(firstName, lastName, address, city, state, zip, phone, ssn, password);
 
-	@Test(priority = 2, groups = { "negative", "bug",
-			"billpay" }, dataProvider = "registrationData", dataProviderClass = TestDataProvider.class)
-	public void bug002_billPaymentAllowsNegativeAmount(String firstName, String lastName, String address, String city,
-			String state, String zip, String phone, String ssn, String username, String password) {
+        BillPayPage billPayPage =
+                new AccountOverviewPage().goToBillPay();
 
-		registerUser(firstName, lastName, address, city, state, zip, phone, ssn, password);
+        billPayPage.payBillWithNegativeAmount(amount);
 
-		BillPayPage billPayPage = new AccountOverviewPage().goToBillPay();
+        String actualResult = billPayPage.getSuccessTitle();
 
-		billPayPage.payBillWithNegativeAmount("-50");
+        printBugOutput(
+                "PB-002",
+                "Bill Payment",
+                "Account Number = " + accountNumber + ", Amount = " + amount,
+                "System should reject negative bill payment amount.",
+                actualResult,
+                actualResult.equals("Bill Payment Complete")
+                        ? "BUG REPRODUCED"
+                        : "BUG NOT REPRODUCED"
+        );
 
-		String actualResult = billPayPage.getSuccessTitle();
+        Assert.assertEquals(
+                actualResult,
+                "Bill Payment Complete",
+                "BUG NOT REPRODUCED: Negative bill payment amount was rejected."
+        );
+    }
 
-		printBugOutput("PB-002", "Bill Payment", "Amount = -50", "System should reject negative bill payment amount.",
-				actualResult, actualResult.equals("Bill Payment Complete") ? "BUG REPRODUCED" : "BUG NOT REPRODUCED");
+    @Test(priority = 3, groups = {"negative", "bug", "transfer"},
+            dataProvider = "bugSameAccountTransfer",
+            dataProviderClass = TestDataProvider.class)
+    public void bug003_transferFundsAllowsSameSourceAndDestinationAccount(
+            String firstName,
+            String lastName,
+            String address,
+            String city,
+            String state,
+            String zip,
+            String phone,
+            String ssn,
+            String username,
+            String password,
+            String amount) {
 
-		Assert.assertEquals(actualResult, "Bill Payment Complete",
-				"BUG NOT REPRODUCED: Negative bill payment amount was rejected.");
-	}
+        registerUser(firstName, lastName, address, city, state, zip, phone, ssn, password);
 
-	@Test(priority = 3, groups = { "negative", "bug",
-			"transfer" }, dataProvider = "registrationData", dataProviderClass = TestDataProvider.class)
-	public void bug003_transferFundsAllowsSameSourceAndDestinationAccount(String firstName, String lastName,
-			String address, String city, String state, String zip, String phone, String ssn, String username,
-			String password) {
+        TransferFundsPage transferFundsPage =
+                new AccountOverviewPage().goToTransferFunds();
 
-		registerUser(firstName, lastName, address, city, state, zip, phone, ssn, password);
+        transferFundsPage.transferSameAccount(amount);
 
-		TransferFundsPage transferFundsPage = new AccountOverviewPage().goToTransferFunds();
+        String actualResult = transferFundsPage.getSuccessMessage();
 
-		transferFundsPage.transferSameAccount("10");
+        printBugOutput(
+                "PB-003",
+                "Transfer Funds",
+                "From Account = Same Account, To Account = Same Account, Amount = " + amount,
+                "System should block same source and destination account transfer.",
+                actualResult,
+                actualResult.equals("Transfer Complete!")
+                        ? "BUG REPRODUCED"
+                        : "BUG NOT REPRODUCED"
+        );
 
-		String actualResult = transferFundsPage.getSuccessMessage();
+        Assert.assertEquals(
+                actualResult,
+                "Transfer Complete!",
+                "BUG NOT REPRODUCED: Same account transfer was blocked."
+        );
+    }
 
-		printBugOutput("PB-003", "Transfer Funds",
-				"From Account = Same Account, To Account = Same Account, Amount = 10",
-				"System should block same source and destination account transfer.", actualResult,
-				actualResult.equals("Transfer Complete!") ? "BUG REPRODUCED" : "BUG NOT REPRODUCED");
+    @Test(priority = 4, groups = {"negative", "bug", "loan"},
+            dataProvider = "bugLoanNegative",
+            dataProviderClass = TestDataProvider.class)
+    public void bug004_requestLoanAllowsNegativeDownPayment(
+            String firstName,
+            String lastName,
+            String address,
+            String city,
+            String state,
+            String zip,
+            String phone,
+            String ssn,
+            String username,
+            String password,
+            String loanAmount,
+            String downPayment) {
 
-		Assert.assertEquals(actualResult, "Transfer Complete!",
-				"BUG NOT REPRODUCED: Same account transfer was blocked.");
-	}
+        registerUser(firstName, lastName, address, city, state, zip, phone, ssn, password);
 
-	@Test(priority = 4, groups = { "negative", "bug",
-			"loan" }, dataProvider = "registrationData", dataProviderClass = TestDataProvider.class)
-	public void bug004_requestLoanAllowsNegativeDownPayment(String firstName, String lastName, String address,
-			String city, String state, String zip, String phone, String ssn, String username, String password)
-	{
+        RequestLoanPage requestLoanPage =
+                new AccountOverviewPage().goToRequestLoan();
 
-		registerUser(firstName, lastName, address, city, state, zip, phone, ssn, password);
+        requestLoanPage.requestLoan(loanAmount, downPayment);
 
-		RequestLoanPage requestLoanPage = new AccountOverviewPage().goToRequestLoan();
+        String actualResult = requestLoanPage.getResultTitle();
 
-		requestLoanPage.requestLoan("100", "-10");
+        printBugOutput(
+                "PB-004",
+                "Request Loan",
+                "Loan Amount = " + loanAmount + ", Down Payment = " + downPayment,
+                "System should reject negative down payment value.",
+                actualResult,
+                actualResult.equals("Loan Request Processed")
+                        ? "BUG REPRODUCED"
+                        : "BUG NOT REPRODUCED"
+        );
 
-		String actualResult = requestLoanPage.getResultTitle();
-
-		printBugOutput("PB-004", "Request Loan", "Loan Amount = 100, Down Payment = -10",
-				"System should reject negative down payment value.", actualResult,
-				actualResult.equals("Loan Request Processed") ? "BUG REPRODUCED" : "BUG NOT REPRODUCED");
-
-		Assert.assertEquals(actualResult, "Loan Request Processed",
-				"BUG NOT REPRODUCED: Negative down payment was rejected.");
-	}
+        Assert.assertEquals(
+                actualResult,
+                "Loan Request Processed",
+                "BUG NOT REPRODUCED: Negative down payment was rejected."
+        );
+    }
 }

@@ -23,18 +23,31 @@ public class DriverFactory {
         Logger.getLogger("org.openqa.selenium").setLevel(Level.SEVERE);
 
         boolean headless = Boolean.parseBoolean(ConfigReader.get("headless"));
-        String browserName = browser == null ? "chrome" : browser.toLowerCase().trim();
+
+        String browserName;
+
+        if (browser == null || browser.trim().isEmpty()) {
+            browserName = ConfigReader.get("browser");
+        } else {
+            browserName = browser;
+        }
+
+        browserName = browserName.toLowerCase().trim();
 
         switch (browserName) {
 
             case "safari":
+
                 if (headless) {
-                    System.out.println("Safari does not support headless mode. Launching Safari in normal mode.");
+                    System.out.println(
+                            "Safari does not support headless mode. Launching Safari normally.");
                 }
+
                 driver.set(new SafariDriver());
                 break;
 
             case "firefox":
+
                 WebDriverManager.firefoxdriver().setup();
 
                 FirefoxOptions firefoxOptions = new FirefoxOptions();
@@ -48,6 +61,7 @@ public class DriverFactory {
 
             case "chrome":
             default:
+
                 WebDriverManager.chromedriver().setup();
 
                 ChromeOptions chromeOptions = new ChromeOptions();
@@ -67,8 +81,9 @@ public class DriverFactory {
                 break;
         }
 
-        getDriver().manage().timeouts()
-                .implicitlyWait(Duration.ofSeconds(ConfigReader.getInt("implicitWait")));
+        getDriver().manage().timeouts().implicitlyWait(
+                Duration.ofSeconds(ConfigReader.getInt("implicitWait"))
+        );
 
         if (!isRunningInsideDocker()) {
             getDriver().manage().window().maximize();
@@ -87,6 +102,7 @@ public class DriverFactory {
     }
 
     public static void quitDriver() {
+
         if (driver.get() != null) {
             driver.get().quit();
             driver.remove();

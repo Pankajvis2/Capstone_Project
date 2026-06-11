@@ -1,6 +1,7 @@
 package test;
 
 import base.BaseTest;
+import config.ConfigReader;
 import dataproviders.TestDataProvider;
 import factory.DriverFactory;
 import org.testng.Assert;
@@ -10,9 +11,6 @@ import pages.*;
 import java.util.UUID;
 
 public class ParaBankTest extends BaseTest {
-
-    private static final String PASSWORD = "Test@123";
-    private static final String REGISTER_URL = "https://parabank.parasoft.com/parabank/register.htm";
 
     private String uniqueUsername() {
         String randomPart = UUID.randomUUID()
@@ -24,7 +22,9 @@ public class ParaBankTest extends BaseTest {
     }
 
     private RegisterPage openRegisterPageDirectly() {
-        DriverFactory.getDriver().get(REGISTER_URL);
+        DriverFactory.getDriver().get(
+                ConfigReader.get("registerUrl")
+        );
         return new RegisterPage();
     }
 
@@ -41,23 +41,16 @@ public class ParaBankTest extends BaseTest {
         System.out.println();
     }
 
-    private String registerAndReturnUsername() {
+    private String registerAndReturnUsername(String fn, String ln, String address, String city,
+                                             String state, String zip, String phone, String ssn,
+                                             String pass) {
+
         for (int attempt = 1; attempt <= 5; attempt++) {
+
             String username = uniqueUsername();
             RegisterPage registerPage = openRegisterPageDirectly();
 
-            registerPage.register(
-                    "Pankaj",
-                    "Vishwakarma",
-                    "Street 1",
-                    "Lucknow",
-                    "UP",
-                    "226001",
-                    "9999999999",
-                    "123456789",
-                    username,
-                    PASSWORD
-            );
+            registerPage.register(fn, ln, address, city, state, zip, phone, ssn, username, pass);
 
             if (registerPage.isRegistrationSuccessful()) {
                 System.out.println("Registered user: " + username);
@@ -76,15 +69,18 @@ public class ParaBankTest extends BaseTest {
     }
 
     @Test(priority = 1, groups = {"smoke", "registration"},
-            dataProvider = "registrationData", dataProviderClass = TestDataProvider.class)
-    public void registerNewCustomer(String fn, String ln, String address, String city, String state, String zip,
-                                    String phone, String ssn, String user, String pass) {
+            dataProvider = "registrationData",
+            dataProviderClass = TestDataProvider.class)
+    public void registerNewCustomer(String fn, String ln, String address, String city,
+                                    String state, String zip, String phone, String ssn,
+                                    String user, String pass) {
 
         boolean registered = false;
         String lastError = "";
         String uniqueUser = "";
 
         for (int attempt = 1; attempt <= 5; attempt++) {
+
             uniqueUser = uniqueUsername();
             RegisterPage registerPage = openRegisterPageDirectly();
 
@@ -115,7 +111,8 @@ public class ParaBankTest extends BaseTest {
     }
 
     @Test(priority = 2, groups = {"negative"},
-            dataProvider = "invalidLoginData", dataProviderClass = TestDataProvider.class)
+            dataProvider = "invalidLoginData",
+            dataProviderClass = TestDataProvider.class)
     public void invalidLoginTest(String user, String pass) {
 
         HomePage homePage = new HomePage();
@@ -134,10 +131,16 @@ public class ParaBankTest extends BaseTest {
         Assert.assertTrue(error.length() > 0, "Error message was not displayed");
     }
 
-    @Test(priority = 3, groups = {"smoke", "login"})
-    public void validLoginTest() {
+    @Test(priority = 3, groups = {"smoke", "login"},
+            dataProvider = "registrationData",
+            dataProviderClass = TestDataProvider.class)
+    public void validLoginTest(String fn, String ln, String address, String city,
+                               String state, String zip, String phone, String ssn,
+                               String user, String pass) {
 
-        String username = registerAndReturnUsername();
+        String username = registerAndReturnUsername(
+                fn, ln, address, city, state, zip, phone, ssn, pass
+        );
 
         AccountOverviewPage overviewPage = new AccountOverviewPage();
         boolean visible = overviewPage.isAccountOverviewVisible();
@@ -155,10 +158,14 @@ public class ParaBankTest extends BaseTest {
         Assert.assertTrue(visible, "Account overview page not displayed");
     }
 
-    @Test(priority = 4, groups = {"regression"})
-    public void openNewSavingsAccountTest() {
+    @Test(priority = 4, groups = {"regression"},
+            dataProvider = "registrationData",
+            dataProviderClass = TestDataProvider.class)
+    public void openNewSavingsAccountTest(String fn, String ln, String address, String city,
+                                          String state, String zip, String phone, String ssn,
+                                          String user, String pass) {
 
-        registerAndReturnUsername();
+        registerAndReturnUsername(fn, ln, address, city, state, zip, phone, ssn, pass);
 
         OpenAccountPage openAccountPage = new AccountOverviewPage().goToOpenNewAccount();
         openAccountPage.openSavingsAccount();
@@ -178,16 +185,20 @@ public class ParaBankTest extends BaseTest {
         Assert.assertFalse(accountId.isBlank(), "New account number missing");
     }
 
-    @Test(priority = 5, groups = {"regression"})
-    public void transferFundsTest() {
+    @Test(priority = 5, groups = {"regression"},
+            dataProvider = "transferFundsData",
+            dataProviderClass = TestDataProvider.class)
+    public void transferFundsTest(String fn, String ln, String address, String city,
+                                  String state, String zip, String phone, String ssn,
+                                  String user, String pass, String amount) {
 
-        registerAndReturnUsername();
+        registerAndReturnUsername(fn, ln, address, city, state, zip, phone, ssn, pass);
 
         OpenAccountPage openAccountPage = new AccountOverviewPage().goToOpenNewAccount();
         openAccountPage.openSavingsAccount();
 
         TransferFundsPage transferFundsPage = new AccountOverviewPage().goToTransferFunds();
-        transferFundsPage.transfer("10");
+        transferFundsPage.transfer(amount);
 
         String successMessage = transferFundsPage.getSuccessMessage();
 
@@ -202,13 +213,17 @@ public class ParaBankTest extends BaseTest {
         Assert.assertEquals(successMessage, "Transfer Complete!", "Transfer failed");
     }
 
-    @Test(priority = 6, groups = {"regression"})
-    public void billPaymentTest() {
+    @Test(priority = 6, groups = {"regression"},
+            dataProvider = "billPayData",
+            dataProviderClass = TestDataProvider.class)
+    public void billPaymentTest(String fn, String ln, String address, String city,
+                                String state, String zip, String phone, String ssn,
+                                String user, String pass, String accountNumber, String amount) {
 
-        registerAndReturnUsername();
+        registerAndReturnUsername(fn, ln, address, city, state, zip, phone, ssn, pass);
 
         BillPayPage billPayPage = new AccountOverviewPage().goToBillPay();
-        billPayPage.payBill("12345", "5");
+        billPayPage.payBill(accountNumber, amount);
 
         String successTitle = billPayPage.getSuccessTitle();
 
@@ -223,19 +238,23 @@ public class ParaBankTest extends BaseTest {
         Assert.assertEquals(successTitle, "Bill Payment Complete", "Bill payment failed");
     }
 
-    @Test(priority = 7, groups = {"regression", "account-services"})
-    public void findTransactionTest() {
+    @Test(priority = 7, groups = {"regression", "account-services"},
+            dataProvider = "findTransactionData",
+            dataProviderClass = TestDataProvider.class)
+    public void findTransactionTest(String fn, String ln, String address, String city,
+                                    String state, String zip, String phone, String ssn,
+                                    String user, String pass, String amount) {
 
-        registerAndReturnUsername();
+        registerAndReturnUsername(fn, ln, address, city, state, zip, phone, ssn, pass);
 
         OpenAccountPage openAccountPage = new AccountOverviewPage().goToOpenNewAccount();
         openAccountPage.openSavingsAccount();
 
         TransferFundsPage transferFundsPage = new AccountOverviewPage().goToTransferFunds();
-        transferFundsPage.transfer("10");
+        transferFundsPage.transfer(amount);
 
         FindTransactionsPage findTransactionsPage = new AccountOverviewPage().goToFindTransactions();
-        findTransactionsPage.findTransactionByAmount("10");
+        findTransactionsPage.findTransactionByAmount(amount);
 
         String resultTitle = findTransactionsPage.getResultTitle();
         boolean resultDisplayed = findTransactionsPage.isResultDisplayed();
@@ -252,21 +271,30 @@ public class ParaBankTest extends BaseTest {
         Assert.assertTrue(resultDisplayed, "Transaction search result was not displayed");
     }
 
-    @Test(priority = 8, groups = {"regression", "account-services"})
-    public void updateContactInfoTest() {
+    @Test(priority = 8, groups = {"regression", "account-services"},
+            dataProvider = "updateContactData",
+            dataProviderClass = TestDataProvider.class)
+    public void updateContactInfoTest(String fn, String ln, String address, String city,
+                                      String state, String zip, String phone, String ssn,
+                                      String user, String pass,
+                                      String updatedFirstName, String updatedLastName,
+                                      String updatedAddress, String updatedCity,
+                                      String updatedState, String updatedZip,
+                                      String updatedPhone) {
 
-        registerAndReturnUsername();
+        registerAndReturnUsername(fn, ln, address, city, state, zip, phone, ssn, pass);
 
-        UpdateContactInfoPage updateContactInfoPage = new AccountOverviewPage().goToUpdateContactInfo();
+        UpdateContactInfoPage updateContactInfoPage =
+                new AccountOverviewPage().goToUpdateContactInfo();
 
         updateContactInfoPage.updateContactInfo(
-                "Pankaj",
-                "Vishwakarma",
-                "Updated Street 2",
-                "Lucknow",
-                "UP",
-                "226002",
-                "8888888888"
+                updatedFirstName,
+                updatedLastName,
+                updatedAddress,
+                updatedCity,
+                updatedState,
+                updatedZip,
+                updatedPhone
         );
 
         String successTitle = updateContactInfoPage.getSuccessTitle();
@@ -284,13 +312,18 @@ public class ParaBankTest extends BaseTest {
         Assert.assertTrue(updated, "Profile update confirmation was not displayed");
     }
 
-    @Test(priority = 9, groups = {"regression", "account-services"})
-    public void requestLoanTest() {
+    @Test(priority = 9, groups = {"regression", "account-services"},
+            dataProvider = "loanData",
+            dataProviderClass = TestDataProvider.class)
+    public void requestLoanTest(String fn, String ln, String address, String city,
+                                String state, String zip, String phone, String ssn,
+                                String user, String pass,
+                                String loanAmount, String downPayment) {
 
-        registerAndReturnUsername();
+        registerAndReturnUsername(fn, ln, address, city, state, zip, phone, ssn, pass);
 
         RequestLoanPage requestLoanPage = new AccountOverviewPage().goToRequestLoan();
-        requestLoanPage.requestLoan("100", "10");
+        requestLoanPage.requestLoan(loanAmount, downPayment);
 
         String resultTitle = requestLoanPage.getResultTitle();
         boolean processed = requestLoanPage.isLoanRequestProcessed();
@@ -307,10 +340,14 @@ public class ParaBankTest extends BaseTest {
         Assert.assertTrue(processed, "Loan request result was not displayed");
     }
 
-    @Test(priority = 10, groups = {"smoke"})
-    public void logoutTest() {
+    @Test(priority = 10, groups = {"smoke"},
+            dataProvider = "registrationData",
+            dataProviderClass = TestDataProvider.class)
+    public void logoutTest(String fn, String ln, String address, String city,
+                           String state, String zip, String phone, String ssn,
+                           String user, String pass) {
 
-        registerAndReturnUsername();
+        registerAndReturnUsername(fn, ln, address, city, state, zip, phone, ssn, pass);
 
         new AccountOverviewPage().logout();
 
